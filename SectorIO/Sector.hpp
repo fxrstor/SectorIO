@@ -1,67 +1,59 @@
 ﻿#pragma once
-#include <ntddk.h>
-#include <ntdddisk.h>
-#include <ntstrsafe.h>
-#include "Main.hpp"
+#include <initguid.h>
+#include "Driver.hpp"
 #include "vector.hpp"
-
-extern "C" {
-    NTSYSAPI NTSTATUS NTAPI ObReferenceObjectByName(
-        PUNICODE_STRING ObjectName,
-        ULONG Attributes,
-        PACCESS_STATE AccessState,
-        ACCESS_MASK DesiredAccess,
-        POBJECT_TYPE ObjectType,
-        KPROCESSOR_MODE AccessMode,
-        PVOID ParseContext OPTIONAL,
-        PVOID* Object
-    );
-
-    NTSYSAPI NTSTATUS NTAPI ObQueryNameString(
-        PVOID Object,
-        POBJECT_NAME_INFORMATION ObjectNameInfo,
-        ULONG Length,
-        PULONG ReturnLength
-    );
-
-    NTSYSAPI POBJECT_TYPE* IoDriverObjectType;
-}
-
-// Grabbed from phnt project - ntobapi.h
-typedef struct _OBJECT_DIRECTORY_INFORMATION
-{
-    UNICODE_STRING Name;
-    UNICODE_STRING TypeName;
-} OBJECT_DIRECTORY_INFORMATION, * POBJECT_DIRECTORY_INFORMATION;
-
-typedef struct _IOCTL_COMPLETION_CONTEXT {
-    KEVENT event;
-    IO_STATUS_BLOCK ioStatusBlock;
-} IOCTL_COMPLETION_CONTEXT, * PIOCTL_COMPLETION_CONTEXT;
-
+#include "DeviceIo.hpp"
 
 #pragma pack (push, 1)
 
-typedef struct _DISK_OBJECT {
-    BOOLEAN geometryFound;
-    ULONG diskIndex;
-    ULONG sectorSize;
-    PDEVICE_OBJECT pDiskDeviceObject;
-} DISK_OBJECT, *PDISK_OBJECT;
+typedef struct _STORAGE_OBJECT_INFO {
+    BOOLEAN isRawDiskObject;
 
-typedef struct _DISK_LOCATION {
     ULONG diskIndex;
+    ULONG partitionNumber;
+
+    ULONGLONG partitionStartingOffset;
+    ULONGLONG partitionSizeBytes;
+    ULONGLONG diskSizeBytes;
+
+    // ULONGLONG volumeTotalBytes;
+    // ULONGLONG volumeFreeBytes;
+
+    ULONG sectorSize;
+
+    // GUID volumeGuid;
+    GUID gptDiskId;
+
+    PARTITION_STYLE partitionStyle;
+    GUID gptPartitionTypeGuid;
+    GUID gptPartitionIdGuid;
+    ULONGLONG gptAttributes;
+    WCHAR gptName[36];
+    UCHAR mbrPartitionType;
+
+    // ULONG volumeSerialNumber;
+    // WCHAR volumeLabel[64];
+    // WCHAR fileSystemName[32];
+    // WCHAR driveLetters[8*2];
+
+    // TODO: implement the commented stuff...
+} STORAGE_OBJECT_INFO, *PSTORAGE_OBJECT_INFO;
+
+typedef struct _STORAGE_OBJECT {
+    STORAGE_OBJECT_INFO info;
+    PDEVICE_OBJECT pStorageDeviceObject;
+} STORAGE_OBJECT, *PSTORAGE_OBJECT;
+
+typedef struct _STORAGE_LOCATION {
+    BOOLEAN isRawDiskObject;
+    ULONG diskIndex;
+    ULONG partitionNumber;
     ULONGLONG sectorNumber;
-} DISK_LOCATION, *PDISK_LOCATION;
+} STORAGE_LOCATION, *PSTORAGE_LOCATION;
 
 #pragma pack (pop)
 
-NTSTATUS GetAllDiskObjects();
-NTSTATUS GetGeometry(PDEVICE_OBJECT pDiskDeviceObject, PDISK_GEOMETRY pDiskGeometry);
+void FreeCollectedStorageObjects();
+NTSTATUS RefreshGlobalStorageObjects();
 
-NTSTATUS GetSectorSizeIoctlHandler(IN PIRP pIrp, IN PDISK_OBJECT pDiskObject);
-NTSTATUS RWIrpCompletion(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp, IN PVOID Context);
-NTSTATUS ReadSectorIoctlHandler(IN PIRP pIrp, IN PIO_STACK_LOCATION pIrpStack, IN PDISK_OBJECT pDiskObject, IN PDISK_LOCATION pDiskLocation);
-NTSTATUS WriteSectorIoctlHandler(IN PIRP pIrp, IN PIO_STACK_LOCATION pIrpStack, IN PDISK_OBJECT pDiskObject, IN PDISK_LOCATION pDiskLocation);
-
-extern vector<PDISK_OBJECT>* g_pDiskObjects;
+extern vector<PSTORAGE_OBJECT>* g_pStorageObjects;

@@ -1,5 +1,5 @@
 #pragma once
-#include <ntddk.h>
+#include <ntifs.h>
 
 #ifndef DRIVER_TAG
 #define DRIVER_TAG ' wen'
