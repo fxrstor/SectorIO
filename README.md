@@ -10,11 +10,12 @@ I chose WDK 19045 (2004) because for some reason Microsoft's latest WDK (as of w
 WDK 19045 ensures compatibility from Windows 7 to 11 (tested successfully).
 
 ## TODOs
-- [ ] Add support for arbitrary partition sector R/W - I assume there was partition support in the original driver (see the Inspiration section) but it no longer works in latest versions of Windows (from 7 iirc).
-AFAIK, I tested with PartMgr.sys, didn't work. I also added the code to check for newer Partition names (not `DP(`), zero results with that too. Possible solution: look into `DiskCryptor` program and see how it performs operations to disks and partitions.
-- [ ] Remove the dependency on undocumented API as they are subjected to private changes (although unlikely).
-- [ ] Add optional support for WdmlibIoCreateDeviceSecure so non-admin processes cannot access the driver. 
-- [ ] Code is pretty messy, improve it.
-
+- [X] Add support for arbitrary partition sector R/W - I assume there was partition support in the original driver (see the Inspiration section) but it no longer works in latest versions of Windows (from 7 iirc).
+AFAIK, I tested with PartMgr.sys, didn't work. I also added the code to check for newer Partition names (not `DP(`), zero results with that too. Possible solution: look into `DiskCryptor` program and see how it performs operations to disks and partitions. (see PR #1)
+- [X] Remove the dependency on undocumented API as they are subjected to private changes (although unlikely).
+- [X] Add optional support for WdmlibIoCreateDeviceSecure so non-admin processes cannot access the driver. 
+- [X] Code is pretty messy, improve it. (kind of)
+- [ ] Ensure consistency across debug messages.
+ 
 ## Inspiration
 Special thanks to this broken [repo](https://github.com/jschicht/SectorIo). To fix and improve that driver is the aim of this repository.
